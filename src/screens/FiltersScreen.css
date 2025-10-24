@@ -1,0 +1,262 @@
+/* FiltersScreen.css */
+
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll-view {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+}
+
+.section {
+  background-color: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.drinks-summary {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.current-location {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.location-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.location-button:hover {
+  background-color: #1976D2;
+}
+
+.custom-location-container {
+  display: flex;
+  gap: 8px;
+}
+
+.location-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.search-location-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-location-button:hover {
+  background-color: #45a049;
+}
+
+.slider-container {
+  text-align: center;
+}
+
+.slider-label {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #2196F3;
+}
+
+.distance-buttons,
+.price-buttons,
+.rating-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.distance-button,
+.price-button,
+.rating-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.distance-button:hover,
+.price-button:hover,
+.rating-button:hover {
+  background-color: #e0e0e0;
+}
+
+.distance-button.selected {
+  background-color: #E3F2FD;
+  border-color: #2196F3;
+  color: #2196F3;
+  font-weight: 500;
+}
+
+.price-button.selected {
+  background-color: #E8F5E8;
+  border-color: #4CAF50;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.rating-button.selected {
+  background-color: #FFF3E0;
+  border-color: #FF9800;
+  color: #FF9800;
+  font-weight: 500;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.toggle-label {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}
+
+.toggle-switch {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* New radio button styles */
+.filter-group {
+  margin-bottom: 20px;
+}
+
+.filter-group-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #f9f9f9;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.radio-option input[type="radio"] {
+  margin-right: 8px;
+  accent-color: #2196F3;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+  background: #E3F2FD;
+  border-color: #2196F3;
+  color: #2196F3;
+  font-weight: 500;
+}
+
+.bottom-section {
+  padding: 16px;
+  background-color: white;
+  border-top: 1px solid #ddd;
+}
+
+.search-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #45a049;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .scroll-view {
+    padding: 12px;
+  }
+  
+  .custom-location-container {
+    flex-direction: column;
+  }
+  
+  .distance-buttons,
+  .price-buttons,
+  .rating-buttons {
+    justify-content: flex-start;
+  }
+}
