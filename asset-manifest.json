@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/singapore-drinks-app/static/css/main.c0205cc5.css",
+    "main.js": "/singapore-drinks-app/static/js/main.9193114f.js",
+    "index.html": "/singapore-drinks-app/index.html",
+    "main.c0205cc5.css.map": "/singapore-drinks-app/static/css/main.c0205cc5.css.map",
+    "main.9193114f.js.map": "/singapore-drinks-app/static/js/main.9193114f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c0205cc5.css",
+    "static/js/main.9193114f.js"
+  ]
+}
