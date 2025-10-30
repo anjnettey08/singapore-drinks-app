@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DrinkType, DrinkOrder, DrinkCustomization, CustomizationOption } from '../types/index';
 import { singaporeDrinks } from '../data/drinks';
 import { useSession } from '../contexts/SessionContext';
@@ -8,11 +8,35 @@ interface DrinkSelectionScreenProps {
   onNavigate: (screen: string, params?: any) => void;
 }
 
+// Draft selection interface
+interface DraftSelection {
+  drink: DrinkType;
+  customizations: { [key: string]: string };
+  quantity: number;
+}
+
 const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate }) => {
   const [selectedDrinks, setSelectedDrinks] = useState<DrinkOrder[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [customizingDrink, setCustomizingDrink] = useState<number | null>(null);
+  
+  // Draft selection state
+  const [draftSelection, setDraftSelection] = useState<DraftSelection | null>(null);
+
+  // Keyboard handling for Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && draftSelection) {
+        cancelDraft();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [draftSelection]);
   
   // Session context
   const { 
@@ -93,7 +117,9 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
     'Cheese Tea': '🧀'
   };
 
-  const addDrink = async (drink: DrinkType) => {
+  // Draft selection functions
+  const openDraftSelection = (drink: DrinkType) => {
+    console.log('Opening draft selection for:', drink.name);
     const defaultCustomizations: { [key: string]: string } = {};
     
     drink.customizations.forEach((customization) => {
@@ -102,30 +128,89 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
       }
     });
 
-    const newOrder: DrinkOrder = {
-      drinkId: drink.id,
+    const draft: DraftSelection = {
+      drink,
       customizations: defaultCustomizations,
       quantity: 1,
     };
 
-    // Add to local state for customization
-    setSelectedDrinks([...selectedDrinks, newOrder]);
-    setCustomizingDrink(selectedDrinks.length);
+    setDraftSelection(draft);
+    setCustomizingDrink(null); // Clear any existing customization
+  };
 
-    // If in a session, also add to session immediately
+  const cancelDraft = () => {
+    setDraftSelection(null);
+  };
+
+  const updateDraftCustomization = (customizationId: string, optionId: string) => {
+    if (!draftSelection) return;
+    
+    setDraftSelection({
+      ...draftSelection,
+      customizations: {
+        ...draftSelection.customizations,
+        [customizationId]: optionId
+      }
+    });
+  };
+
+  const updateDraftQuantity = (quantity: number) => {
+    if (!draftSelection || quantity < 1) return;
+    
+    setDraftSelection({
+      ...draftSelection,
+      quantity
+    });
+  };
+
+  // Validation: check if all required customizations are selected
+  const isDraftValid = (): boolean => {
+    if (!draftSelection) return false;
+    
+    return draftSelection.drink.customizations.every(customization => {
+      if (customization.isRequired) {
+        return draftSelection.customizations[customization.id] !== undefined;
+      }
+      return true;
+    });
+  };
+
+  const commitDraft = async () => {
+    if (!draftSelection || !isDraftValid()) return;
+
+    const newOrder: DrinkOrder = {
+      drinkId: draftSelection.drink.id,
+      customizations: draftSelection.customizations,
+      quantity: draftSelection.quantity,
+    };
+
+    // Check if identical item exists in cart (same drink + same options)
+    const existingIndex = selectedDrinks.findIndex(order => 
+      order.drinkId === newOrder.drinkId &&
+      JSON.stringify(order.customizations) === JSON.stringify(newOrder.customizations)
+    );
+
+    if (existingIndex !== -1) {
+      // Increment existing item quantity
+      const updatedOrders = [...selectedDrinks];
+      updatedOrders[existingIndex].quantity += newOrder.quantity;
+      setSelectedDrinks(updatedOrders);
+    } else {
+      // Add new item to cart
+      setSelectedDrinks([...selectedDrinks, newOrder]);
+    }
+
+    // If in a session, also add to session
     if (isInSession && currentSession && currentUser) {
       try {
-        await addOrderToSession(newOrder, drink.name, drink.price);
+        await addOrderToSession(newOrder, draftSelection.drink.name, draftSelection.drink.price);
       } catch (error) {
         console.error('Failed to add order to session:', error);
       }
     }
-  };
 
-  const updateCustomization = (orderIndex: number, customizationId: string, optionId: string) => {
-    const updatedOrders = [...selectedDrinks];
-    updatedOrders[orderIndex].customizations[customizationId] = optionId;
-    setSelectedDrinks(updatedOrders);
+    // Clear draft
+    setDraftSelection(null);
   };
 
   const updateQuantity = (orderIndex: number, quantity: number) => {
@@ -166,8 +251,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
 
   const renderCustomizationOptions = (
     customization: DrinkCustomization,
-    currentValue: string,
-    orderIndex: number
+    currentValue: string
   ) => (
     <div key={customization.id} className="customization-group">
       <label className="customization-label">
@@ -178,7 +262,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
           <button
             key={option.id}
             className={`customization-option ${currentValue === option.id ? 'selected' : ''}`}
-            onClick={() => updateCustomization(orderIndex, customization.id, option.id)}
+            onClick={() => updateDraftCustomization(customization.id, option.id)}
           >
             <span className="option-name">{option.displayName}</span>
           </button>
@@ -191,7 +275,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
     <div 
       key={drink.id} 
       className="drink-option clickable"
-      onClick={() => addDrink(drink)}
+      onClick={() => openDraftSelection(drink)}
     >
       <div className="drink-info">
         <h4 className="drink-name">{drink.name}</h4>
@@ -251,8 +335,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
             {drink.customizations.map((customization) =>
               renderCustomizationOptions(
                 customization,
-                order.customizations[customization.id] || '',
-                index
+                order.customizations[customization.id] || ''
               )
             )}
           </div>
@@ -412,6 +495,82 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
           </div>
         </div>
       </div>
+
+      {/* Draft Selection Panel */}
+      {draftSelection && (
+        <div className="draft-overlay" onClick={cancelDraft}>
+          <div className="draft-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="draft-header">
+              <h3 className="draft-title">{draftSelection.drink.name}</h3>
+              <p className="draft-subtitle">Customize your drink</p>
+            </div>
+            
+            <div className="draft-content">
+              {/* Quantity Selector */}
+              <div className="draft-quantity-section">
+                <label className="draft-quantity-label">Quantity</label>
+                <div className="draft-quantity-controls">
+                  <button 
+                    className="draft-quantity-btn"
+                    onClick={() => updateDraftQuantity(draftSelection.quantity - 1)}
+                    disabled={draftSelection.quantity <= 1}
+                  >
+                    -
+                  </button>
+                  <span className="draft-quantity-display">{draftSelection.quantity}</span>
+                  <button 
+                    className="draft-quantity-btn"
+                    onClick={() => updateDraftQuantity(draftSelection.quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Customizations */}
+              <div className="draft-customizations">
+                {draftSelection.drink.customizations.map((customization) => (
+                  <div key={customization.id} className="draft-customization-group">
+                    <label className="draft-customization-label">
+                      {customization.displayName}
+                      {customization.isRequired && <span className="draft-required"> *</span>}
+                    </label>
+                    <div className="draft-customization-options">
+                      {customization.options.map((option) => (
+                        <button
+                          key={option.id}
+                          className={`draft-customization-option ${
+                            draftSelection.customizations[customization.id] === option.id ? 'selected' : ''
+                          }`}
+                          onClick={() => updateDraftCustomization(customization.id, option.id)}
+                        >
+                          <span className="draft-option-name">{option.displayName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="draft-actions">
+              <button 
+                className="draft-cancel-btn"
+                onClick={cancelDraft}
+              >
+                Cancel
+              </button>
+              <button 
+                className="draft-commit-btn"
+                onClick={commitDraft}
+                disabled={!isDraftValid()}
+              >
+                ✅ Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
