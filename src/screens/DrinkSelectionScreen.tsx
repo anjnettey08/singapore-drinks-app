@@ -10,16 +10,38 @@ interface DrinkSelectionScreenProps {
 const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate }) => {
   const [selectedDrinks, setSelectedDrinks] = useState<DrinkOrder[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [customizingDrink, setCustomizingDrink] = useState<number | null>(null);
 
-  // Group drinks by category
+  // Group drinks by category with special handling for tea subcategories
   const drinksByCategory = singaporeDrinks.reduce((acc, drink) => {
-    if (!acc[drink.category]) {
-      acc[drink.category] = [];
+    // Group all tea variants under "bubble-tea"
+    const categoryKey = ['milk-tea', 'fruit-tea', 'cheese-tea'].includes(drink.category) 
+      ? 'bubble-tea' 
+      : drink.category;
+      
+    if (!acc[categoryKey]) {
+      acc[categoryKey] = [];
     }
-    acc[drink.category].push(drink);
+    acc[categoryKey].push(drink);
     return acc;
   }, {} as Record<string, DrinkType[]>);
+
+  // Group bubble tea drinks by subcategory for better organization
+  const groupBubbleTeaDrinks = (drinks: DrinkType[]) => {
+    return drinks.reduce((acc, drink) => {
+      const subCategory = drink.category === 'bubble-tea' ? 'Classic Bubble Tea' :
+                         drink.category === 'milk-tea' ? 'Milk Tea' :
+                         drink.category === 'fruit-tea' ? 'Fruit Tea' :
+                         drink.category === 'cheese-tea' ? 'Cheese Tea' : 'Other';
+      
+      if (!acc[subCategory]) {
+        acc[subCategory] = [];
+      }
+      acc[subCategory].push(drink);
+      return acc;
+    }, {} as Record<string, DrinkType[]>);
+  };
 
   // Category emojis for better visual appeal
   const categoryEmojis: { [key: string]: string } = {
@@ -44,14 +66,19 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
     'coffee': 'Coffee',
     'kopi': 'Kopi',
     'tea': 'Tea',
-    'bubble-tea': 'Bubble Tea',
-    'milk-tea': 'Milk Tea',
-    'fruit-tea': 'Fruit Tea',
-    'cheese-tea': 'Cheese Tea',
+    'bubble-tea': 'Bubble Tea & Variants',
     'juice': 'Juices',
     'soft-drink': 'Soft Drinks',
     'other-local-drinks': 'Other Local Drinks',
     'alcohol': 'Alcohol',
+  };
+
+  // Subcategory emojis for bubble tea variants
+  const subCategoryEmojis: { [key: string]: string } = {
+    'Classic Bubble Tea': '🧋',
+    'Milk Tea': '🥛',
+    'Fruit Tea': '🍓',
+    'Cheese Tea': '🧀'
   };
 
   const addDrink = (drink: DrinkType) => {
@@ -99,7 +126,20 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
   };
 
   const toggleCategory = (category: string) => {
+    const isOpening = expandedCategory !== category;
     setExpandedCategory(expandedCategory === category ? null : category);
+    
+    // Reset expanded subcategory when changing main category
+    if (isOpening && category === 'bubble-tea') {
+      // Auto-expand first subcategory when opening bubble tea
+      setExpandedSubCategory('Classic Bubble Tea');
+    } else {
+      setExpandedSubCategory(null);
+    }
+  };
+
+  const toggleSubCategory = (subCategory: string) => {
+    setExpandedSubCategory(expandedSubCategory === subCategory ? null : subCategory);
   };
 
   const renderCustomizationOptions = (
@@ -126,17 +166,17 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
   );
 
   const renderDrinkOption = (drink: DrinkType) => (
-    <div key={drink.id} className="drink-option">
+    <div 
+      key={drink.id} 
+      className="drink-option clickable"
+      onClick={() => addDrink(drink)}
+    >
       <div className="drink-info">
         <h4 className="drink-name">{drink.name}</h4>
       </div>
-      <button
-        className="add-drink-btn"
-        onClick={() => addDrink(drink)}
-        aria-label={`Add ${drink.name}`}
-      >
+      <div className="add-drink-btn">
         <span className="add-icon">+</span>
-      </button>
+      </div>
     </div>
   );
 
@@ -230,9 +270,38 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
                 
                 {expandedCategory === category && (
                   <div className="category-content">
-                    <div className="drinks-grid">
-                      {drinks.map(renderDrinkOption)}
-                    </div>
+                    {category === 'bubble-tea' ? (
+                      // Special rendering for bubble tea with subcategories
+                      Object.entries(groupBubbleTeaDrinks(drinks)).map(([subCategory, subDrinks]) => (
+                        <div key={subCategory} className="subcategory-section">
+                          <button
+                            className={`subcategory-header ${expandedSubCategory === subCategory ? 'expanded' : ''}`}
+                            onClick={() => toggleSubCategory(subCategory)}
+                          >
+                            <div className="subcategory-info">
+                              <span className="subcategory-emoji">{subCategoryEmojis[subCategory] || '🥤'}</span>
+                              <span className="subcategory-name">{subCategory}</span>
+                              <span className="subcategory-count">({subDrinks.length})</span>
+                            </div>
+                            <span className={`subcategory-expand-icon ${expandedSubCategory === subCategory ? 'rotated' : ''}`}>
+                              ▼
+                            </span>
+                          </button>
+                          {expandedSubCategory === subCategory && (
+                            <div className="subcategory-content">
+                              <div className="drinks-grid">
+                                {subDrinks.map(renderDrinkOption)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      // Regular rendering for other categories
+                      <div className="drinks-grid">
+                        {drinks.map(renderDrinkOption)}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
