@@ -1055,6 +1055,18 @@
   min-width: 100px;
 }
 
+.session-btn.leave-session {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  flex: 1;
+  min-width: 100px;
+  font-size: 12px;
+}
+
+.session-btn.leave-session:hover {
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  transform: translateY(-1px);
+}
+
 .session-btn.create-join {
   background: linear-gradient(135deg, #d49b20 0%, #764ba2 100%);
   padding: 12px 24px;

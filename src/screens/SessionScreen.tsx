@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSession } from '../contexts/SessionContext';
+import SessionBrowser from '../components/SessionBrowser';
 import './SessionScreen.css';
 
 interface SessionScreenProps {
@@ -11,6 +12,7 @@ export default function SessionScreen({ onNavigateToOrders, onNavigateToBack }: 
   const { 
     createSession, 
     joinSession, 
+    leaveSession,
     currentSession, 
     currentUser, 
     isInSession, 
@@ -24,6 +26,8 @@ export default function SessionScreen({ onNavigateToOrders, onNavigateToBack }: 
   const [sessionId, setSessionId] = useState('');
   const [userName, setUserName] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSessionBrowser, setShowSessionBrowser] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +49,17 @@ export default function SessionScreen({ onNavigateToOrders, onNavigateToBack }: 
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }
+  };
+
+  const handleBrowserJoinSession = (selectedSessionId: string) => {
+    setSessionId(selectedSessionId);
+    setActiveTab('join');
+    setShowSessionBrowser(false);
+  };
+
+  const handleLeaveSession = () => {
+    leaveSession();
+    setShowLeaveConfirm(false);
   };
 
   // If already in a session, show session info
@@ -110,6 +125,13 @@ export default function SessionScreen({ onNavigateToOrders, onNavigateToBack }: 
               onClick={onNavigateToOrders}
             >
               View All Orders ({currentSession.orders.length})
+            </button>
+            
+            <button 
+              className="leave-session-btn"
+              onClick={() => setShowLeaveConfirm(true)}
+            >
+              🚪 Leave Session
             </button>
           </div>
         </div>
@@ -229,13 +251,74 @@ export default function SessionScreen({ onNavigateToOrders, onNavigateToBack }: 
               {loading ? 'Joining...' : 'Join Session'}
             </button>
 
+            <div className="browse-sessions-container">
+              <span>or</span>
+              <button 
+                type="button"
+                className="browse-sessions-btn"
+                onClick={() => setShowSessionBrowser(true)}
+              >
+                🔍 Browse Available Sessions
+              </button>
+            </div>
+
             <div className="info-box">
               <h4>Need a session ID?</h4>
               <p>Ask the person who created the session for the 6-character session ID. It looks like "ABC123".</p>
+              <div style={{ marginTop: '10px', padding: '8px', backgroundColor: 'rgba(116, 75, 162, 0.1)', borderRadius: '6px' }}>
+                <strong>Demo sessions to try:</strong>
+                <br />
+                • DEMO01 (Alice's session)
+                <br />
+                • TEST12 (Charlie's session)  
+                <br />
+                • 67Q660 (David's session)
+              </div>
             </div>
           </form>
         )}
       </div>
+
+      {/* Leave Session Confirmation Modal */}
+      {showLeaveConfirm && (
+        <>
+          <div className="modal-overlay" onClick={() => setShowLeaveConfirm(false)} />
+          <div className="leave-confirm-modal">
+            <div className="leave-confirm-header">
+              <h3>Leave Session?</h3>
+            </div>
+            <div className="leave-confirm-content">
+              <p>Are you sure you want to leave session <strong>{currentSession?.id}</strong>?</p>
+              <p>You can always rejoin later using the same session ID.</p>
+            </div>
+            <div className="leave-confirm-actions">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowLeaveConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-leave-btn"
+                onClick={handleLeaveSession}
+              >
+                Yes, Leave Session
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Session Browser Modal */}
+      {showSessionBrowser && (
+        <>
+          <div className="modal-overlay" onClick={() => setShowSessionBrowser(false)} />
+          <SessionBrowser 
+            onJoinSession={handleBrowserJoinSession}
+            onClose={() => setShowSessionBrowser(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

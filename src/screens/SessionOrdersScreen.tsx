@@ -28,7 +28,7 @@ interface RestaurantGroupedOrders {
 }
 
 export default function SessionOrdersScreen({ onNavigateToBack, onNavigateToSession }: SessionOrdersScreenProps) {
-  const { currentSession, currentUser, refreshSession, loading, closeSession } = useSession();
+  const { currentSession, currentUser, refreshSession, loading, closeSession, leaveSession } = useSession();
   const [viewMode, setViewMode] = useState<'drink' | 'user' | 'restaurant'>('restaurant');
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
@@ -45,9 +45,9 @@ export default function SessionOrdersScreen({ onNavigateToBack, onNavigateToSess
     return (
       <div className="session-orders-screen">
         <div className="session-orders-header">
-          <button className="back-btn" onClick={onNavigateToBack}>
+          {/* <button className="back-btn" onClick={onNavigateToBack}>
             ← Back
-          </button>
+          </button> */}
           <h1>No Active Session</h1>
         </div>
         <div className="no-session-message">
@@ -342,6 +342,17 @@ export default function SessionOrdersScreen({ onNavigateToBack, onNavigateToSess
             onClick={() => setShowCloseConfirm(true)}
           >
             Close Session
+          </button>
+        </div>
+      )}
+
+      {!isCreator && (
+        <div className="session-actions">
+          <button 
+            className="leave-session-btn"
+            onClick={leaveSession}
+          >
+            🚪 Leave Session
           </button>
         </div>
       )}

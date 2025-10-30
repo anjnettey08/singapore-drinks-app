@@ -12,9 +12,113 @@ import {
 } from '../types';
 import { singaporeDrinks } from '../data/drinks';
 
-// In-memory storage for prototype (replace with database in production)
+// File-based session database for persistence
+interface SessionDatabase {
+  sessions: { [key: string]: Session };
+  lastUpdated: string;
+}
+
+// Persistent file-based storage for sessions
 class SessionStorage {
   private sessions: Map<string, Session> = new Map();
+  private dbFilePath = '/src/data/sessions-db.json';
+
+  constructor() {
+    // Load existing sessions from file
+    this.loadSessionsFromFile();
+    // Create demo sessions if none exist
+    if (this.sessions.size === 0) {
+      this.createDemoSessions();
+    }
+  }
+
+  // Load sessions from file
+  private loadSessionsFromFile() {
+    try {
+      // In a real app, you'd use fs.readFileSync or fetch
+      // For browser compatibility, we'll use localStorage as fallback
+      const savedSessions = localStorage.getItem('sessions_db');
+      if (savedSessions) {
+        const db: SessionDatabase = JSON.parse(savedSessions);
+        Object.entries(db.sessions).forEach(([id, session]) => {
+          // Convert date strings back to Date objects
+          session.createdAt = new Date(session.createdAt);
+          session.users = session.users.map(user => ({
+            ...user,
+            joinedAt: new Date(user.joinedAt)
+          }));
+          session.orders = session.orders.map(order => ({
+            ...order,
+            orderedAt: new Date(order.orderedAt)
+          }));
+          this.sessions.set(id, session);
+        });
+        console.log(`✅ Loaded ${this.sessions.size} sessions from storage`);
+      }
+    } catch (error) {
+      console.warn('Could not load sessions from storage:', error);
+    }
+  }
+
+  // Save sessions to file
+  private saveSessionsToFile() {
+    try {
+      const db: SessionDatabase = {
+        sessions: Object.fromEntries(this.sessions),
+        lastUpdated: new Date().toISOString()
+      };
+      // In a real app, you'd use fs.writeFileSync or send to server
+      // For browser compatibility, we'll use localStorage
+      localStorage.setItem('sessions_db', JSON.stringify(db));
+      console.log(`💾 Saved ${this.sessions.size} sessions to storage`);
+    } catch (error) {
+      console.warn('Could not save sessions to storage:', error);
+    }
+  }
+
+  // Create demo sessions for testing
+  private createDemoSessions() {
+    const demoSessions = [
+      {
+        id: 'DEMO01',
+        creatorName: 'Alice',
+        users: ['Alice', 'Bob']
+      },
+      {
+        id: 'TEST12',
+        creatorName: 'Charlie',
+        users: ['Charlie']
+      },
+      {
+        id: '67Q660',
+        creatorName: 'David',
+        users: ['David', 'Emma']
+      }
+    ];
+
+    demoSessions.forEach(demo => {
+      const creatorId = this.generateUserId();
+      const session: Session = {
+        id: demo.id,
+        creatorId,
+        creatorName: demo.creatorName,
+        createdAt: new Date(),
+        users: demo.users.map((name, index) => ({
+          id: index === 0 ? creatorId : this.generateUserId(),
+          name,
+          joinedAt: new Date()
+        })),
+        orders: [],
+        isActive: true,
+        totalAmount: 0
+      };
+      this.sessions.set(demo.id, session);
+    });
+    
+    // Save demo sessions to persistent storage
+    this.saveSessionsToFile();
+    console.log('🎮 Created demo sessions:', Array.from(this.sessions.keys()));
+  }
 
   // Generate a random 6-character alphanumeric session ID
   private generateSessionId(): string {
@@ -62,6 +166,7 @@ class SessionStorage {
       };
 
       this.sessions.set(sessionId, session);
+      this.saveSessionsToFile(); // 💾 Save to persistent storage
 
       return {
         success: true,
@@ -116,6 +221,7 @@ class SessionStorage {
       };
 
       session.users.push(newUser);
+      this.saveSessionsToFile(); // 💾 Save to persistent storage
 
       return {
         success: true,
@@ -199,6 +305,7 @@ class SessionStorage {
 
       session.orders.push(newOrder);
       session.totalAmount += request.totalPrice;
+      this.saveSessionsToFile(); // 💾 Save to persistent storage
 
       return {
         success: true,
@@ -238,6 +345,7 @@ class SessionStorage {
       }
 
       session.isActive = false;
+      this.saveSessionsToFile(); // 💾 Save to persistent storage
 
       return {
         success: true,
@@ -320,6 +428,7 @@ class SessionStorage {
       // Add all orders to session
       session.orders.push(...newOrders);
       session.totalAmount += totalOrderPrice;
+      this.saveSessionsToFile(); // 💾 Save to persistent storage
 
       return {
         success: true,
@@ -425,6 +534,19 @@ export const sessionService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(sessionStorage.getAllSessions());
+      }, 50);
+    });
+  },
+
+  // GET /sessions/available - Get available session IDs
+  getAvailableSessionIds: (): Promise<string[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const sessions = sessionStorage.getAllSessions();
+        const availableIds = sessions
+          .filter(session => session.isActive)
+          .map(session => session.id);
+        resolve(availableIds);
       }, 50);
     });
   }

@@ -20,6 +20,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
     currentUser, 
     isInSession, 
     addOrderToSession,
+    leaveSession,
     loading: sessionLoading,
     error: sessionError 
   } = useSession();
@@ -352,6 +353,12 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
                     onClick={() => onNavigate('Session')}
                   >
                     Session Details
+                  </button>
+                  <button 
+                    className="session-btn leave-session"
+                    onClick={leaveSession}
+                  >
+                    🚪 Leave Session
                   </button>
                 </div>
               </div>
