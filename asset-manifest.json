@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/singapore-drinks-app/static/css/main.849b34e5.css",
-    "main.js": "/singapore-drinks-app/static/js/main.df05bef2.js",
+    "main.js": "/singapore-drinks-app/static/js/main.29e4f94c.js",
     "index.html": "/singapore-drinks-app/index.html",
     "main.849b34e5.css.map": "/singapore-drinks-app/static/css/main.849b34e5.css.map",
-    "main.df05bef2.js.map": "/singapore-drinks-app/static/js/main.df05bef2.js.map"
+    "main.29e4f94c.js.map": "/singapore-drinks-app/static/js/main.29e4f94c.js.map"
   },
   "entrypoints": [
     "static/css/main.849b34e5.css",
-    "static/js/main.df05bef2.js"
+    "static/js/main.29e4f94c.js"
   ]
 }
