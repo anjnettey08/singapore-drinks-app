@@ -80,3 +80,68 @@ export interface AppState {
   sortBy: SortOption;
   loading: boolean;
 }
+
+// Session-related interfaces for collaborative ordering
+export interface SessionUser {
+  id: string;
+  name: string;
+  joinedAt: Date;
+}
+
+export interface SessionOrder {
+  id: string;
+  userId: string;
+  userName: string;
+  restaurantId: string;
+  restaurantName: string;
+  drinkId: string;
+  drinkName: string;
+  customizations: { [customizationId: string]: string };
+  quantity: number;
+  price: number;
+  orderedAt: Date;
+}
+
+export interface Session {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  createdAt: Date;
+  users: SessionUser[];
+  orders: SessionOrder[];
+  isActive: boolean;
+  totalAmount: number;
+}
+
+export interface SessionCreateRequest {
+  creatorName: string;
+}
+
+export interface SessionJoinRequest {
+  sessionId: string;
+  userName: string;
+}
+
+export interface SessionResponse {
+  success: boolean;
+  session?: Session;
+  message?: string;
+  error?: string;
+}
+
+export interface AddOrderRequest {
+  sessionId: string;
+  userId: string;
+  restaurantId: string;
+  restaurantName: string;
+  drinkOrder: DrinkOrder;
+  drinkName: string;
+  totalPrice: number;
+}
+
+export interface AddRestaurantOrderRequest {
+  sessionId: string;
+  userId: string;
+  restaurant: Restaurant;
+  drinkOrders: DrinkOrder[];
+}

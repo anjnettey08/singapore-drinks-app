@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DrinkType, DrinkOrder, DrinkCustomization, CustomizationOption } from '../types/index';
 import { singaporeDrinks } from '../data/drinks';
+import { useSession } from '../contexts/SessionContext';
 import './DrinkSelectionScreen.css';
 
 interface DrinkSelectionScreenProps {
@@ -12,6 +13,16 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [customizingDrink, setCustomizingDrink] = useState<number | null>(null);
+  
+  // Session context
+  const { 
+    currentSession, 
+    currentUser, 
+    isInSession, 
+    addOrderToSession,
+    loading: sessionLoading,
+    error: sessionError 
+  } = useSession();
 
   // Group drinks by category with special handling for tea subcategories
   const drinksByCategory = singaporeDrinks.reduce((acc, drink) => {
@@ -81,7 +92,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
     'Cheese Tea': '🧀'
   };
 
-  const addDrink = (drink: DrinkType) => {
+  const addDrink = async (drink: DrinkType) => {
     const defaultCustomizations: { [key: string]: string } = {};
     
     drink.customizations.forEach((customization) => {
@@ -96,8 +107,18 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
       quantity: 1,
     };
 
+    // Add to local state for customization
     setSelectedDrinks([...selectedDrinks, newOrder]);
     setCustomizingDrink(selectedDrinks.length);
+
+    // If in a session, also add to session immediately
+    if (isInSession && currentSession && currentUser) {
+      try {
+        await addOrderToSession(newOrder, drink.name, drink.price);
+      } catch (error) {
+        console.error('Failed to add order to session:', error);
+      }
+    }
   };
 
   const updateCustomization = (orderIndex: number, customizationId: string, optionId: string) => {
@@ -242,7 +263,7 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
   return (
     <div className="drink-selection-container">
       <div className="header-section">
-        <h1 className="main-title">🥤 Singapore Local Drinks</h1>
+        <h1 className="main-title"> Singapore Local Drinks</h1>
         <p className="subtitle">Choose your favorite local drinks</p>
       </div>
       
@@ -311,6 +332,49 @@ const DrinkSelectionScreen: React.FC<DrinkSelectionScreenProps> = ({ onNavigate 
 
         {/* Right Side - Your Order */}
         <div className="right-panel">
+          {/* Session Controls */}
+          <div className="session-controls-sidebar">
+            {isInSession ? (
+              <div className="session-active">
+                <div className="session-info">
+                  <span className="session-indicator">👥 In Session: {currentSession?.id}</span>
+                  <span className="session-members">{currentSession?.users.length} members</span>
+                </div>
+                <div className="session-actions">
+                  <button 
+                    className="session-btn view-orders"
+                    onClick={() => onNavigate('SessionOrders')}
+                  >
+                    View Orders ({currentSession?.orders.length || 0})
+                  </button>
+                  <button 
+                    className="session-btn session-details"
+                    onClick={() => onNavigate('Session')}
+                  >
+                    Session Details
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="session-inactive">
+                <p className="session-prompt">Planning a group order? Start a shared session!</p>
+                <button 
+                  className="session-btn create-join"
+                  onClick={() => onNavigate('Session')}
+                >
+                  Create or Join Session
+                </button>
+              </div>
+            )}
+
+            {/* Session Error */}
+            {sessionError && (
+              <div className="session-error">
+                <span>⚠️ {sessionError}</span>
+              </div>
+            )}
+          </div>
+
           <div className="cart-section">
             <div className="cart-header">
               <h2 className="cart-title">🛒 Your Drinks</h2>

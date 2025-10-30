@@ -97,8 +97,15 @@ const FiltersScreen: React.FC<FiltersScreenProps> = ({ onNavigate, selectedDrink
 
   return (
     <div className="container">
+      <div className="filters-header">
+        <button className="back-btn" onClick={() => onNavigate('drinkSelection')}>
+          ← Back
+        </button>
+        <div className="header-content">
+          <h1 className="title">Search Filters</h1>
+        </div>
+      </div>
       <div className="scroll-view">
-        <h1 className="title">Search Filters</h1>
         
         {/* Selected Drinks Summary */}
         <div className="section">

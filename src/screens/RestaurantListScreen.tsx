@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { SearchFilters, DrinkOrder, Restaurant, SortOption } from '../types/index';
 import { singaporeRestaurants } from '../data/restaurants';
 import { singaporeDrinks } from '../data/drinks';
+import { sessionService } from '../services/sessionService';
+import { useSession } from '../contexts/SessionContext';
 import './RestaurantListScreen.css';
 
 interface RestaurantListScreenProps {
@@ -18,9 +20,15 @@ const RestaurantListScreen: React.FC<RestaurantListScreenProps> = ({
   selectedDrinks, 
   filters 
 }) => {
+  const { currentSession, currentUser } = useSession();
   const [sortBy, setSortBy] = useState<SortOption>('distance');
   const [showClosingSoon, setShowClosingSoon] = useState(true);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+  const [isJoiningSession, setIsJoiningSession] = useState(false);
+  const [sessionJoinError, setSessionJoinError] = useState<string>('');
+  const [isAddingToSession, setIsAddingToSession] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     filterAndSortRestaurants();
@@ -216,6 +224,76 @@ const RestaurantListScreen: React.FC<RestaurantListScreenProps> = ({
     window.open(googleMapsUrl, '_blank');
   };
 
+  const handleJoinSession = async () => {
+    if (!selectedSessionId.trim()) {
+      setSessionJoinError('Please enter a Session ID');
+      return;
+    }
+
+    if (!currentUser) {
+      setSessionJoinError('Please create a user profile first');
+      return;
+    }
+
+    setIsJoiningSession(true);
+    setSessionJoinError('');
+
+    try {
+      const result = await sessionService.joinSession(selectedSessionId, currentUser.name);
+      
+      if (result.success) {
+        setSuccessMessage(`Successfully joined session ${selectedSessionId}!`);
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setSessionJoinError(result.error || 'Failed to join session');
+      }
+    } catch (error) {
+      setSessionJoinError('Network error. Please try again.');
+    } finally {
+      setIsJoiningSession(false);
+    }
+  };
+
+  const handleAddToSession = async (restaurant: Restaurant) => {
+    if (!currentSession || !currentUser) {
+      setSessionJoinError('You must be in a session to add orders');
+      return;
+    }
+
+    // Filter selected drinks that are available at this restaurant
+    const availableDrinks = selectedDrinks.filter(order => 
+      restaurant.availableDrinks.includes(order.drinkId)
+    );
+
+    if (availableDrinks.length === 0) {
+      setSessionJoinError('No selected drinks are available at this restaurant');
+      return;
+    }
+
+    setIsAddingToSession(restaurant.id);
+    setSessionJoinError('');
+
+    try {
+      const result = await sessionService.addRestaurantOrderToSession(
+        currentSession.id,
+        currentUser.id,
+        restaurant,
+        availableDrinks
+      );
+
+      if (result.success) {
+        setSuccessMessage(`Order added to session ${currentSession.id}!`);
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setSessionJoinError(result.error || 'Failed to add order to session');
+      }
+    } catch (error) {
+      setSessionJoinError('Network error. Please try again.');
+    } finally {
+      setIsAddingToSession('');
+    }
+  };
+
   const renderSortButtons = () => (
     <div className="sort-container">
       <span className="sort-label">Sort by:</span>
@@ -355,6 +433,23 @@ const RestaurantListScreen: React.FC<RestaurantListScreenProps> = ({
           </div>
         </div>
 
+        {/* Session Order Section */}
+        {currentSession && currentUser && selectedDrinks.some(order => restaurant.availableDrinks.includes(order.drinkId)) && (
+          <div className="session-order-section">
+            <div className="session-order-info">
+              <span className="session-order-icon">👥</span>
+              <span className="session-order-text">Add to Session {currentSession.id}</span>
+            </div>
+            <button
+              className="add-to-session-btn"
+              onClick={() => handleAddToSession(restaurant)}
+              disabled={isAddingToSession === restaurant.id}
+            >
+              {isAddingToSession === restaurant.id ? 'Adding...' : 'Add to Session Order'}
+            </button>
+          </div>
+        )}
+
         <div className="action-buttons">
           <button
             className="call-button"
@@ -385,14 +480,82 @@ const RestaurantListScreen: React.FC<RestaurantListScreenProps> = ({
 
   return (
     <div className="restaurant-list-container">
-      <div className="header">
-        <h2 className="title">
-          Found {filteredRestaurants.length} Drink Shop{filteredRestaurants.length !== 1 ? 's' : ''}
-        </h2>
-        <p className="subtitle">
-          Serving your selected drinks near {filters.location.address}
-        </p>
+      <div className="restaurant-header">
+        <button className="back-btn" onClick={() => onNavigate('drinkSelection')}>
+          ← Back
+        </button>
+        <div className="header-content">
+          <h2 className="title">
+            Found {filteredRestaurants.length} Drink Shop{filteredRestaurants.length !== 1 ? 's' : ''}
+          </h2>
+          <p className="subtitle">
+            Serving your selected drinks near {filters.location.address}
+          </p>
+        </div>
       </div>
+
+      {/* Session Join Section */}
+      {!currentSession && (
+        <div className="session-join-section">
+          <div className="session-join-card">
+            <h3 className="session-join-title">👥 Join a Session</h3>
+            <p className="session-join-subtitle">Add your order to a group session</p>
+            
+            <div className="session-join-form">
+              <div className="session-input-group">
+                <input
+                  type="text"
+                  placeholder="Enter Session ID (e.g., A1B2C3)"
+                  value={selectedSessionId}
+                  onChange={(e) => setSelectedSessionId(e.target.value.toUpperCase())}
+                  className="session-input"
+                  maxLength={6}
+                />
+                <button
+                  onClick={handleJoinSession}
+                  disabled={isJoiningSession}
+                  className="session-join-btn"
+                >
+                  {isJoiningSession ? 'Joining...' : 'Join Session'}
+                </button>
+              </div>
+              
+              {sessionJoinError && (
+                <div className="session-error-msg">{sessionJoinError}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Session Status Section */}
+      {currentSession && (
+        <div className="session-status-section">
+          <div className="session-status-card">
+            <div className="session-status-info">
+              <span className="session-status-icon">👥</span>
+              <div className="session-status-details">
+                <div className="session-status-id">Session: {currentSession.id}</div>
+                <div className="session-status-members">{currentSession.users.length} members</div>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('sessionOrders')}
+              className="view-session-btn"
+            >
+              View Orders
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="success-toast">
+          <span className="success-icon">✅</span>
+          {successMessage}
+        </div>
+      )}
 
       {renderSortButtons()}
 

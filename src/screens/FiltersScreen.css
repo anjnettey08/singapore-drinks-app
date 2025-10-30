@@ -2,67 +2,143 @@
 
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255, 111, 97, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 193, 7, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(20, 184, 166, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #fef7ed 0%, #fdf2f8 25%, #f3e8ff 50%, #e0e7ff 75%, #ecfdf5 100%);
   display: flex;
   flex-direction: column;
+  padding: 40px 20px 20px;
+  position: relative;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 25% 75%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px, 80px 80px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Filters Header with Back Button */
+.filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0 40px 0;
+  position: relative;
+  padding-top: 10px;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #2d3748;
+  padding: 14px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  text-shadow: none;
+  font-family: 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #ff6f61;
+  transform: translateX(-4px) translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 111, 97, 0.3);
+}
+
+.header-content {
+  flex: 1;
+  text-align: center;
 }
 
 .scroll-view {
   flex: 1;
-  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
   overflow-y: auto;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #4b474d, #777279);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .section {
-  background-color: white;
-  padding: 16px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 24px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  color: #2d3748;
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #333;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #2d3748;
+  font-family: 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .drinks-summary {
-  font-size: 14px;
-  color: #666;
+  font-size: 15px;
+  color: #4a5568;
   margin: 0;
+  font-weight: 500;
 }
 
 .current-location {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 12px;
+  font-size: 15px;
+  color: #4a5568;
+  margin-bottom: 16px;
+  font-weight: 500;
 }
 
 .location-button {
-  background-color: #2196F3;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
   width: 100%;
-  margin-bottom: 12px;
-  font-weight: 500;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-family: 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .location-button:hover {
-  background-color: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .custom-location-container {
@@ -72,25 +148,38 @@
 
 .location-input {
   flex: 1;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 12px;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
   font-size: 14px;
+  background: rgba(102, 126, 234, 0.05);
+  transition: all 0.3s ease;
+  font-family: 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.location-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .search-location-button {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
   padding: 12px 16px;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  font-family: 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .search-location-button:hover {
-  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .slider-container {
@@ -219,6 +308,41 @@
   border-color: #2196F3;
   color: #2196F3;
   font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 25px 15px 15px;
+  }
+  
+  .container::before {
+    background-size: 30px 30px, 50px 50px;
+  }
+  
+  .filters-header {
+    margin: 15px 0 30px 0;
+    padding-top: 5px;
+  }
+  
+  .back-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .section {
+    padding: 16px;
+    margin-bottom: 15px;
+  }
+  
+  .custom-location-container {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 .bottom-section {
